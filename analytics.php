@@ -393,23 +393,20 @@ $payment_rate = $total_members > 0 ? round(($members_paid / $total_members) * 10
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Handle year change
+(function () {
     const yearSelect = document.getElementById('yearSelect');
-    if (yearSelect) {
-        yearSelect.addEventListener('change', function() {
-            const selectedYear = this.value;
+    const contentContainer = document.getElementById('content');
 
-            fetch('analytics.php?year=' + selectedYear)
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(err => console.error('Failed to reload analytics:', err));
+    // If analytics.php is opened directly (no #content wrapper),
+    // handle year change by reloading the whole page.
+    if (!contentContainer && yearSelect) {
+        yearSelect.addEventListener('change', function () {
+            const selectedYear = this.value;
+            window.location.href = 'analytics.php?year=' + encodeURIComponent(selectedYear);
         });
     }
 
-    // Chart rendering logic (wrapped so it runs dynamically)
+    // Chart rendering logic
     const months = <?= json_encode($months) ?>;
     const monthlyData = <?= json_encode($monthly_data) ?>;
     const membersPaid = <?= $members_paid ?>;
@@ -475,7 +472,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     }
-});
+})();
 </script>
 
 

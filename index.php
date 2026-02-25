@@ -276,63 +276,73 @@
       
 
     <script>
-        // Attach click listeners to navbar links
-        document.querySelectorAll('a.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                let page = this.getAttribute('data-page');
-                if (!page) return;
+        // Generic loader for pages into #content (also re-runs any scripts inside)
+        function loadPage(page) {
+            const content = document.getElementById('content');
+            if (!content || !page) return;
 
-                // Optional: highlight active link
-                document.querySelectorAll('a.nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-
-                // Fetch the content of the page and load into #content div
-                fetch(page)
+            fetch(page)
                 .then(response => {
                     if (!response.ok) throw new Error('Network response was not OK');
                     return response.text();
                 })
                 .then(html => {
-                    document.getElementById('content').innerHTML = html;
+                    content.innerHTML = html;
+
+                    // Re-run any scripts that came with the loaded page (needed for analytics/charts)
+                    content.querySelectorAll('script').forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        if (oldScript.src) {
+                            newScript.src = oldScript.src;
+                        } else {
+                            newScript.textContent = oldScript.textContent;
+                        }
+                        document.body.appendChild(newScript);
+                        oldScript.remove();
+                    });
                 })
                 .catch(error => {
-                    document.getElementById('content').innerHTML = '<p class="text-danger">Failed to load page.</p>';
+                    content.innerHTML = '<p class="text-danger">Failed to load page.</p>';
                     console.error('Error loading page:', error);
                 });
-            });
+        }
+
+        // Handle navbar and dropdown clicks via event delegation
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a.nav-link, .dropdown-item');
+            if (!target) return;
+
+            const page = target.getAttribute('data-page');
+            if (!page) return;
+
+            e.preventDefault();
+
+            // Highlight active main nav link
+            if (target.classList.contains('nav-link')) {
+                document.querySelectorAll('a.nav-link').forEach(l => l.classList.remove('active'));
+                target.classList.add('active');
+            }
+
+            // Auto-close mobile side nav if open
+            const navContent = document.getElementById('navbarSupportedContent');
+            if (navContent && navContent.classList.contains('openSideNav')) {
+                navContent.classList.remove('openSideNav');
+            }
+
+            loadPage(page);
         });
 
-        // Attach click listeners to dropdown items
-        document.querySelectorAll('.dropdown-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                let page = this.getAttribute('data-page');
-                if (!page) return;
-
-                // Optional: highlight active dropdown item
-                document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-
-                // Fetch the content of the page and load into #content div
-                fetch(page)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not OK');
-                    return response.text();
-                })
-                .then(html => {
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('content').innerHTML = '<p class="text-danger">Failed to load page.</p>';
-                    console.error('Error loading page:', error);
-                });
-            });
+        // Handle year change for analytics when loaded inside index.php
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.id === 'yearSelect') {
+                const year = e.target.value;
+                loadPage('analytics.php?year=' + encodeURIComponent(year));
+            }
         });
     </script>
 
     <script>
-        // Handle monthYearForm submission
+        // Handle monthYearForm and other dynamic form submissions
         document.addEventListener('submit', function(e) {
             if (e.target.matches('#monthYearForm')) {
                 e.preventDefault(); // stop normal page reload
@@ -340,123 +350,59 @@
                 const query = new URLSearchParams(formData).toString();
 
                 fetch('contribution_current_month.php?' + query)
-                .then(res => res.text())
-                .then(html => {
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(err => {
-                    console.error('Error loading month data:', err);
-                    document.getElementById('content').innerHTML = '<p class="text-danger">Failed to load data.</p>';
-                });
+                    .then(res => res.text())
+                    .then(html => {
+                        document.getElementById('content').innerHTML = html;
+                    })
+                    .catch(err => {
+                        console.error('Error loading month data:', err);
+                        document.getElementById('content').innerHTML = '<p class="text-danger">Failed to load data.</p>';
+                    });
             }
 
             // Handle expenseForm submission (dynamically loaded)
             if (e.target.matches('#expenseForm')) {
                 e.preventDefault();
-                
+
                 const formData = new FormData(e.target);
-                
+
                 fetch('expense.php', {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.text())
-                .then(html => {
-                    // Replace the content div with the updated page
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error submitting form:', error);
-                    alert('Failed to submit expense. Please try again.');
-                });
+                    .then(response => response.text())
+                    .then(html => {
+                        // Replace the content div with the updated page
+                        document.getElementById('content').innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.error('Error submitting form:', error);
+                        alert('Failed to submit expense. Please try again.');
+                    });
             }
 
             // Handle addUserForm submission (dynamically loaded)
             if (e.target.matches('#addUserForm')) {
                 e.preventDefault();
-                
+
                 const formData = new FormData(e.target);
-                
+
                 fetch('adduser.php', {
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.text())
-                .then(html => {
-                    // Replace the content div with the updated page
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error submitting form:', error);
-                    alert('Failed to add member. Please try again.');
-                });
+                    .then(response => response.text())
+                    .then(html => {
+                        // Replace the content div with the updated page
+                        document.getElementById('content').innerHTML = html;
+                    })
+                    .catch(error => {
+                        console.error('Error submitting form:', error);
+                        alert('Failed to add member. Please try again.');
+                    });
             }
         });
     </script>
-
-    <script>
-document.addEventListener('click', function(e) {
-    const target = e.target.closest('a.nav-link, .dropdown-item');
-    if (!target) return;
-
-    const page = target.getAttribute('data-page');
-    if (!page) return;
-
-    const content = document.getElementById('content');
-
-    // Function to load analytics and attach listener
-    function loadAnalytics(year) {
-        fetch('analytics.php' + (year ? '?year=' + year : ''))
-            .then(response => response.text())
-            .then(html => {
-    content.innerHTML = html;
-
-    // ✅ Re-run scripts inside dynamically loaded analytics.php (important for charts)
-    content.querySelectorAll("script").forEach(oldScript => {
-        const newScript = document.createElement("script");
-        if (oldScript.src) {
-            newScript.src = oldScript.src;
-        } else {
-            newScript.textContent = oldScript.textContent;
-        }
-        document.body.appendChild(newScript);
-        oldScript.remove();
-    });
-
-    // Reattach listener for year dropdown
-    const yearSelect = content.querySelector('#yearSelect');
-    if (yearSelect) {
-        yearSelect.addEventListener('change', function() {
-            loadAnalytics(this.value);
-        });
-    }
-})
-
-            .catch(err => {
-                console.error('Analytics reload error:', err);
-                content.innerHTML = '<p class="text-danger">Failed to load analytics data.</p>';
-            });
-    }
-
-    // If Analytics page clicked
-    if (page.includes('analytics.php')) {
-        e.preventDefault(); // prevent default link action
-        loadAnalytics();    // initial load
-    }
-});
-</script>
-
-<script>
-// Auto-close mobile side nav when a link is clicked
-document.querySelectorAll('.nav-link:not(.dropdown-toggle), .dropdown-item').forEach(item => {
-    item.addEventListener('click', () => {
-        const navContent = document.getElementById('navbarSupportedContent');
-        if (navContent && navContent.classList.contains('openSideNav')) {
-            navContent.classList.remove('openSideNav');
-        }
-    });
-});
-</script>
 
   </body>
 </html>
