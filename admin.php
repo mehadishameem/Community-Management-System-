@@ -286,6 +286,7 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
               <a class="dropdown-item" href="#" data-page="expense.php">ADD EXPENSE</a>
               <a class="dropdown-item" href="#" data-page="view_expenses.php">VIEW ALL EXPENSES</a>
+              <a class="dropdown-item" href="#" data-page="visuals_upload.php">UPLOAD VISUALS</a>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="#" data-page="analytics.php">ANALYTICS</a>
             </div>
@@ -378,8 +379,9 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
     </script>
 
     <script>
-        // Handle monthYearForm submission
+        // Handle dynamic form submissions
         document.addEventListener('submit', function(e) {
+            // Month/year filter (contribution_current_month.php)
             if (e.target.matches('#monthYearForm')) {
                 e.preventDefault(); // stop normal page reload
                 const formData = new FormData(e.target);
@@ -435,6 +437,26 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
                 .catch(error => {
                     console.error('Error submitting form:', error);
                     alert('Failed to add member. Please try again.');
+                });
+            }
+
+            // Handle visuals upload form submission (dynamically loaded)
+            if (e.target.matches('#visualUploadForm')) {
+                e.preventDefault();
+
+                const formData = new FormData(e.target);
+
+                fetch('visuals_upload.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('content').innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error uploading visual:', error);
+                    alert('Failed to upload image. Please try again.');
                 });
             }
         });

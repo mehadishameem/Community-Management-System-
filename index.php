@@ -228,13 +228,17 @@
         <ul class="navbar-nav mr-auto">
           
           <li class="nav-item">
+            <a class="nav-link active" href="#" data-page="summary.php">হোম</a>
+          </li>
+
+          <li class="nav-item">
             <a class="nav-link" href="#" data-page="contribution_current_month.php">মাসিক কন্ট্রিবিউশন</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#" data-page="view_expenses.php">আর্থিক সারসংক্ষেপ</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#" data-page="donate.php">অর্থদান</a>
+            <a class="nav-link" href="#" data-page="donate.php">অনুদান</a>
           </li>
          
 
@@ -264,9 +268,9 @@
     
 
      <div id="content" class="container-fluid" style="margin-top: 80px; padding: 0;">
-    <!-- Default content load -->
-    <?php include 'contribution_current_month.php'; ?>
-    </div>
+        <!-- Default content load -->
+        <?php include 'summary.php'; ?>
+     </div>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -307,9 +311,26 @@
                 });
         }
 
-        // Handle navbar and dropdown clicks via event delegation
+        function setActiveNavForPage(page) {
+            const navLinks = document.querySelectorAll('a.nav-link');
+            navLinks.forEach(l => l.classList.remove('active'));
+            const match = document.querySelector('a.nav-link[data-page="' + page + '"]');
+            if (match) {
+                match.classList.add('active');
+            } else {
+                const home = document.querySelector('a.nav-link[data-page="summary.php"]');
+                if (home) home.classList.add('active');
+            }
+        }
+
+        // Initialize history with home page state
+        if (window.history && window.history.replaceState) {
+            history.replaceState({ page: 'summary.php' }, '', window.location.pathname);
+        }
+
+        // Handle navbar, dropdown and summary-page buttons via event delegation
         document.addEventListener('click', function(e) {
-            const target = e.target.closest('a.nav-link, .dropdown-item');
+            const target = e.target.closest('a.nav-link, .dropdown-item, .summary-nav');
             if (!target) return;
 
             const page = target.getAttribute('data-page');
@@ -317,11 +338,8 @@
 
             e.preventDefault();
 
-            // Highlight active main nav link
-            if (target.classList.contains('nav-link')) {
-                document.querySelectorAll('a.nav-link').forEach(l => l.classList.remove('active'));
-                target.classList.add('active');
-            }
+            // Highlight active nav based on page
+            setActiveNavForPage(page);
 
             // Auto-close mobile side nav if open
             const navContent = document.getElementById('navbarSupportedContent');
@@ -329,6 +347,19 @@
                 navContent.classList.remove('openSideNav');
             }
 
+            // Push new state so browser Back goes to previous page (home -> other -> back -> home)
+            if (window.history && window.history.pushState) {
+                history.pushState({ page: page }, '', window.location.pathname);
+            }
+
+            loadPage(page);
+        });
+
+        // Handle browser Back/Forward
+        window.addEventListener('popstate', function (e) {
+            const state = e.state || {};
+            const page = state.page || 'summary.php';
+            setActiveNavForPage(page);
             loadPage(page);
         });
 
@@ -336,7 +367,11 @@
         document.addEventListener('change', function(e) {
             if (e.target && e.target.id === 'yearSelect') {
                 const year = e.target.value;
-                loadPage('analytics.php?year=' + encodeURIComponent(year));
+                const page = 'analytics.php?year=' + encodeURIComponent(year);
+                if (window.history && window.history.pushState) {
+                    history.pushState({ page: page }, '', window.location.pathname);
+                }
+                loadPage(page);
             }
         });
     </script>
