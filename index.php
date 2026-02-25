@@ -33,6 +33,31 @@
         font-weight: bold;
         font-size: 1.2em;
         position: relative;
+        line-height: 1.2;
+        margin-right: auto;
+      }
+      .navbar-brand-text {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .btn-donate {
+        background-color: #D4A043;
+        color: #192F59 !important;
+        border: none;
+        font-weight: 700;
+        padding: 8px 18px;
+        border-radius: 4px;
+        font-size: 0.95em;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        text-decoration: none !important;
+        margin: 0 10px;
+        display: none;
+      }
+      .btn-donate:hover {
+        background-color: #C99A3E;
+        transform: scale(1.03);
       }
       .navbar-nav .nav-link {
         color: white !important;
@@ -67,13 +92,25 @@
       
       /* Mobile Side Nav Styles */
       @media (max-width: 991.98px) {
+        .navbar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .navbar-brand {
+          font-size: 14px;
+          margin-right: auto;
+          flex-grow: 0;
+        }
         .navbar-toggler {
-          width: calc(100% - 30px);
-          margin: 10px auto;
-          background-color: #8b5cf6;
+          position: absolute;
+          right: 15px;
+          width: auto;
+          margin: 0;
+          background-color: transparent;
           border: none;
-          border-radius: 6px;
-          padding: 8px 0;
+          border-radius: 0;
+          padding: 0;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -84,6 +121,13 @@
         }
         .navbar-toggler-icon {
           filter: none !important;
+          background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255, 0.55)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat;
+          display: inline-block;
+          vertical-align: middle;
+          content: "";
+          width: 1.5em;
+          height: 1.5em;
         }
         #navbarSupportedContent {
           position: fixed;
@@ -153,6 +197,9 @@
            color: #fff;
         }
       }
+      @media (min-width: 992px) {
+        /* Donate button is hidden */
+      }
       .btn-close-offcanvas {
         display: none;
       }
@@ -164,6 +211,10 @@
   <body>
 
     <nav class="navbar navbar-expand-lg navbar-dark">
+      <a class="navbar-brand" href="#">
+        <span class="navbar-brand-text">Yousuf Ali Bari</span>
+        <span class="navbar-brand-text">Foundation</span>
+      </a>
       
       <button class="navbar-toggler" type="button" onclick="document.getElementById('navbarSupportedContent').classList.add('openSideNav')">
         <span class="navbar-toggler-icon"></span>
@@ -202,8 +253,8 @@
         </ul>
      
         <!-- Admin Login button on the right -->
-        <div class="d-flex align-items-center" style="padding-right: 20px;">
-          <a href="login.php" class="btn-admin-login">🔐 Admin Login</a>
+        <div class="d-flex align-items-center" style="padding: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+          <a href="login.php" class="btn-admin-login" style="margin: 0; display: block; width: 100%; text-align: center;">🔐 Admin Login</a>
         </div>
 
         

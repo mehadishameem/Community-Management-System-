@@ -14,6 +14,91 @@ if (isset($_GET['logout'])) {
   header("Location: index.php");
   exit();
 }
+
+// -------------------------------------------------------
+// Handle memberlist_and_payment.php form submissions HERE
+// (before any HTML output, so header() redirects work)
+// -------------------------------------------------------
+include_once 'partials/_dbconnect2.php';
+
+$all_months_admin = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+$allowed_statuses_admin = ['pending', 'paid'];
+$admin_name_admin = $_SESSION['username'];
+
+$current_year_admin = date('Y');
+$selected_year_admin = isset($_GET['year']) ? (int)$_GET['year'] : $current_year_admin;
+$current_page_admin = isset($_GET['page']) ? max(1, min(4, (int)$_GET['page'])) : (floor(((int)date('n') - 1) / 3) + 1);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+
+  if ($_POST['action'] === 'add_payment' && isset($_POST['member_id'], $_POST['amount'], $_POST['status'], $_POST['payment_date'])) {
+    $member_id = (int)$_POST['member_id'];
+    $amount = floatval($_POST['amount']);
+    $status = $_POST['status'];
+    $payment_date = $_POST['payment_date'];
+    $date_obj = new DateTime($payment_date);
+    $year = (int)$date_obj->format('Y');
+    $month = $date_obj->format('F');
+
+    if (in_array($month, $all_months_admin) && $amount > 0 && in_array($status, $allowed_statuses_admin)) {
+      $stmt = $conn->prepare("INSERT INTO payment (id, month, year, amount, status, payment_date, added_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+      $stmt->bind_param("isiisss", $member_id, $month, $year, $amount, $status, $payment_date, $admin_name_admin);
+      if ($stmt->execute()) {
+        $_SESSION['message'] = "Added $amount to $month $year for member ID $member_id with status $status.";
+        $stmt->close();
+        header("Location: admin.php?year=$year&page=$current_page_admin");
+        exit();
+      }
+      $stmt->close();
+    }
+  }
+
+  elseif ($_POST['action'] === 'edit_payment' && isset($_POST['edit_member_id'], $_POST['edit_month'], $_POST['edit_amount'], $_POST['edit_status'], $_POST['edit_payment_date'])) {
+    $member_id = (int)$_POST['edit_member_id'];
+    $month = $_POST['edit_month'];
+    $amount = floatval($_POST['edit_amount']);
+    $status = $_POST['edit_status'];
+    $payment_date = $_POST['edit_payment_date'];
+    $date_obj = new DateTime($payment_date);
+    $year = (int)$date_obj->format('Y');
+
+    if (in_array($month, $all_months_admin) && $amount >= 0 && in_array($status, $allowed_statuses_admin)) {
+      $del = $conn->prepare("DELETE FROM payment WHERE id = ? AND month = ? AND year = ?");
+      $del->bind_param("isi", $member_id, $month, $year);
+      $del->execute();
+      $del->close();
+
+      if ($amount > 0) {
+        $ins = $conn->prepare("INSERT INTO payment (id, month, year, amount, status, payment_date, added_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $ins->bind_param("isiisss", $member_id, $month, $year, $amount, $status, $payment_date, $admin_name_admin);
+        $ins->execute();
+        $ins->close();
+      }
+
+      $_SESSION['message'] = "Payment updated for member ID $member_id, month $month $year.";
+      header("Location: admin.php?year=$year&page=$current_page_admin");
+      exit();
+    }
+  }
+}
+
+// Handle confirm payment (GET)
+if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
+  $confirm_id = (int)$_GET['confirm_id'];
+  $confirm_month = $_GET['confirm_month'];
+  $confirm_year = (int)$_GET['confirm_year'];
+
+  if (in_array($confirm_month, $all_months_admin)) {
+    $stmt = $conn->prepare("UPDATE payment SET status='paid', added_by=? WHERE id=? AND month=? AND year=? AND status='pending'");
+    $stmt->bind_param("sisi", $admin_name_admin, $confirm_id, $confirm_month, $confirm_year);
+    $stmt->execute();
+    $stmt->close();
+
+    $_SESSION['message'] = "Payment status updated to paid for $confirm_month $confirm_year.";
+    header("Location: admin.php?year=$confirm_year&page=$current_page_admin");
+    exit();
+  }
+}
 ?>
 
 
