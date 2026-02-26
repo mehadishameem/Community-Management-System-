@@ -253,7 +253,7 @@ $result = $conn->query($sql);
             
             <?php
             // Calculate total contributions
-            $contributionSql = "SELECT SUM(amount) as total FROM payment";
+            $contributionSql = "SELECT SUM(amount) as total FROM payment WHERE LOWER(status) = 'paid'";
             $contributionResult = $conn->query($contributionSql);
             $contributionRow = $contributionResult->fetch_assoc();
             $totalContribution = $contributionRow['total'] ?? 0;
