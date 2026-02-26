@@ -344,27 +344,16 @@ window.addEventListener('DOMContentLoaded', function() {
   <div class="error"><?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
 
-<!-- Mobile-only year selector bar -->
-<div class="mobile-year-bar">
-  <label for="mobile-year">Year:</label>
-  <select id="mobile-year" onchange="changeYear(this.value)">
-    <?php foreach ($available_years as $year): ?>
-      <option value="<?= $year ?>" <?= $year == $selected_year ? 'selected' : '' ?>><?= $year ?></option>
-    <?php endforeach; ?>
-  </select>
-</div>
-
 <div class="table-container">
 <table>
   <thead>
     <tr>
       <th style="min-width: 140px;">Add Money</th>
-      <th class="col-name" style="min-width: 150px;">Member Name</th>
-      <th class="col-summary" style="display:none;">Status</th>
+      <th style="min-width: 150px;">Member Name</th>
       <?php foreach ($allowed_months as $m): ?>
         <th style="min-width: 120px;"><?= $m ?></th>
       <?php endforeach; ?>
-      <th class="col-total" style="min-width: 130px;">Total (Paid)</th>
+      <th style="min-width: 130px;">Total (Paid)</th>
       <th style="min-width: 150px;">Actions</th>
     </tr>
   </thead>
@@ -374,25 +363,13 @@ window.addEventListener('DOMContentLoaded', function() {
         <?php
           $id = $member['id'];
           $total_paid = 0;
-          foreach ($all_months as $m) {
+          foreach ($allowed_months as $m) {
             $total_paid += $payments_data[$id][$m]['paid']['amount'] ?? 0;
           }
         ?>
-        <?php
-          // Build summary badge for mobile
-          $has_pending_any = false;
-          $has_paid_any = false;
-          foreach ($all_months as $m) {
-            if (($payments_data[$id][$m]['pending']['amount'] ?? 0) > 0) $has_pending_any = true;
-            if (($payments_data[$id][$m]['paid']['amount'] ?? 0) > 0) $has_paid_any = true;
-          }
-          $summary_badge = $has_pending_any
-            ? '<span class="pending-cell" style="cursor:default;min-width:70px;font-size:11px;padding:4px 8px;">Pending</span>'
-            : ($has_paid_any ? '<span class="paid-cell" style="min-width:70px;font-size:11px;padding:4px 8px;">Paid</span>' : '<span style="color:#9ca3af;font-size:12px;">—</span>');
-        ?>
-        <tr onclick="openDrawer(<?= $id ?>)" style="cursor:pointer;">
+        <tr>
           <td>
-            <form method="POST" onclick="event.stopPropagation()">
+            <form method="POST">
               <input type="hidden" name="action" value="add_payment" />
               <input type="hidden" name="member_id" value="<?= $id ?>" />
 
@@ -411,8 +388,7 @@ window.addEventListener('DOMContentLoaded', function() {
               </div>
             </form>
           </td>
-          <td class="col-name"><?= htmlspecialchars($member['name']) ?></td>
-          <td class="col-summary" onclick="event.stopPropagation(); openDrawer(<?= $id ?>)"><?= $summary_badge ?></td>
+          <td><?= htmlspecialchars($member['name']) ?></td>
 
           <?php foreach ($allowed_months as $m):
             $paid_data = $payments_data[$id][$m]['paid'] ?? null;
@@ -462,7 +438,7 @@ window.addEventListener('DOMContentLoaded', function() {
             </td>
           <?php endforeach; ?>
 
-          <td class="col-total"><strong><?= number_format($total_paid, 2) ?></strong></td>
+          <td><strong><?= number_format($total_paid, 2) ?></strong></td>
 
           <td>
             <?php
@@ -501,230 +477,16 @@ window.addEventListener('DOMContentLoaded', function() {
   </tbody>
   <tfoot>
     <tr>
-      <th class="col-foot-label" colspan="2">Month-wise Total (Paid)</th>
+      <th colspan="2">Month-wise Total (Paid)</th>
       <?php foreach ($allowed_months as $m): ?>
         <th><?= number_format($month_totals[$m], 2) ?></th>
       <?php endforeach; ?>
-      <th class="col-foot-grand"><?= number_format($grand_total, 2) ?></th>
+      <th><?= number_format($grand_total, 2) ?></th>
       <th></th>
     </tr>
   </tfoot>
 </table>
 </div>
-
-<!-- Mobile grand total bar -->
-<div class="mobile-grand-total">
-  <span>Grand Total (All Paid)</span>
-  <span><?php
-    $mobile_grand = 0;
-    foreach ($payments_data as $mid => $months) {
-      foreach ($all_months as $mm) {
-        $mobile_grand += $months[$mm]['paid']['amount'] ?? 0;
-      }
-    }
-    echo number_format($mobile_grand, 2);
-  ?></span>
-</div>
-
-<!-- ── Mobile Bottom Drawer ── -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-<div class="drawer" id="memberDrawer">
-  <div class="drawer-handle"></div>
-  <div class="drawer-header">
-    <h3 id="drawerMemberName">Member</h3>
-    <button class="drawer-close" onclick="closeDrawer()">✕</button>
-  </div>
-  <div class="drawer-body" id="drawerBody">
-    <!-- filled by JS -->
-  </div>
-</div>
-
-<script>
-// All member data from PHP — used to populate the drawer
-const memberData = <?php
-  $drawerData = [];
-  foreach ($members as $member) {
-    $id = $member['id'];
-    $total_paid = 0;
-    $months_info = [];
-    foreach ($all_months as $m) {
-      $paid   = $payments_data[$id][$m]['paid']['amount']    ?? 0;
-      $pending= $payments_data[$id][$m]['pending']['amount'] ?? 0;
-      $paid_by   = $payments_data[$id][$m]['paid']['added_by']    ?? '';
-      $pending_by= $payments_data[$id][$m]['pending']['added_by'] ?? '';
-      $total_paid += $paid;
-      $months_info[] = [
-        'month'      => $m,
-        'paid'       => (float)$paid,
-        'pending'    => (float)$pending,
-        'paid_by'    => $paid_by,
-        'pending_by' => $pending_by,
-      ];
-    }
-    $drawerData[$id] = [
-      'id'         => $id,
-      'name'       => $member['name'],
-      'total_paid' => $total_paid,
-      'months'     => $months_info,
-    ];
-  }
-  echo json_encode($drawerData, JSON_UNESCAPED_UNICODE);
-?>;
-
-const selectedYear = <?= $selected_year ?>;
-const currentPage  = <?= $current_page ?>;
-
-function openDrawer(memberId) {
-  if (window.innerWidth > 768) return;
-  const data = memberData[memberId];
-  if (!data) return;
-
-  document.getElementById('drawerMemberName').textContent = data.name;
-  let html = '';
-
-  // ── 1. Add Payment ──
-  html += `<div class="drawer-section-title">Add Payment</div>
-  <div class="drawer-add-form">
-    <form method="POST">
-      <input type="hidden" name="action" value="add_payment"/>
-      <input type="hidden" name="member_id" value="${data.id}"/>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <input type="date" name="payment_date" required value="${todayStr()}" style="width:100%"/>
-        <input type="number" name="amount" min="0.01" step="any" placeholder="Amount" required style="width:100%"/>
-        <select name="status" required style="width:100%">
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-        </select>
-        <button type="submit" style="width:100%">Add Payment</button>
-      </div>
-    </form>
-  </div>`;
-
-  // ── 2. Total ──
-  html += `<div class="drawer-total-row">
-    <span>Total Paid (All Months)</span>
-    <span>${data.total_paid.toFixed(2)}</span>
-  </div>`;
-
-  // ── 3. Payment Status per Month with inline Edit ──
-  html += '<div class="drawer-section-title">Payment Status — All Months</div>';
-  html += '<div class="drawer-months">';
-
-  const allMonthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
-  data.months.forEach((m, idx) => {
-    const hasPaid    = m.paid > 0;
-    const hasPending = m.pending > 0;
-    const hasData    = hasPaid || hasPending;
-    const rowId      = `edit-row-${data.id}-${idx}`;
-    const mPage      = Math.floor(allMonthNames.indexOf(m.month) / 3) + 1;
-    const currentAmount = (m.paid + m.pending).toFixed(2);
-    const currentStatus = hasPending ? 'pending' : 'paid';
-    const mIdx = allMonthNames.indexOf(m.month);
-    const prefilledDate = `${selectedYear}-${String(mIdx+1).padStart(2,'0')}-01`;
-
-    html += `<div class="drawer-month-card">
-      <div class="drawer-month-row">
-        <span class="drawer-month-name">${m.month}</span>
-        <div class="drawer-month-right">
-          <div class="drawer-month-status">`;
-
-    if (hasPending) {
-      html += `<span class="pending-cell" onclick="confirmPaymentDrawer(${data.id},'${m.month}',${selectedYear})">
-        Pending: ${m.pending.toFixed(2)}
-        ${m.pending_by ? `<div class='user-info'>by: ${escHtml(m.pending_by)}</div>` : ''}
-      </span>`;
-    }
-    if (hasPaid) {
-      html += `<span class="paid-cell">
-        Paid: ${m.paid.toFixed(2)}
-        ${m.paid_by ? `<div class='user-info'>by: ${escHtml(m.paid_by)}</div>` : ''}
-      </span>`;
-    }
-    if (!hasData) {
-      html += `<span class="drawer-no-data">—</span>`;
-    }
-
-    html += `</div>`;
-
-    // Edit toggle button — always show, but edit form only if hasData
-    if (hasData) {
-      html += `<button type="button" class="drawer-edit-btn" onclick="toggleEditRow('${rowId}')">Edit</button>`;
-    }
-
-    html += `</div></div>`;
-
-    // Inline edit form — hidden by default, toggled
-    if (hasData) {
-      html += `<div class="drawer-edit-inline" id="${rowId}" style="display:none;">
-        <form method="POST">
-          <input type="hidden" name="action" value="edit_payment"/>
-          <input type="hidden" name="edit_member_id" value="${data.id}"/>
-          <input type="hidden" name="edit_month" value="${m.month}"/>
-          <div style="display:flex;flex-direction:column;gap:8px;padding:12px;">
-            <input type="date" name="edit_payment_date" required value="${prefilledDate}" style="width:100%"/>
-            <input type="number" name="edit_amount" min="0" step="0.01" value="${currentAmount}" required style="width:100%"/>
-            <select name="edit_status" required style="width:100%">
-              <option value="pending" ${currentStatus==='pending'?'selected':''}>Pending</option>
-              <option value="paid" ${currentStatus==='paid'?'selected':''}>Paid</option>
-            </select>
-            <div style="display:flex;gap:8px;">
-              <button type="submit" style="flex:1;">Save</button>
-              <button type="button" class="drawer-cancel-btn" onclick="toggleEditRow('${rowId}')" style="flex:1;">Cancel</button>
-            </div>
-          </div>
-        </form>
-      </div>`;
-    }
-
-    html += `</div>`; // close drawer-month-card
-  });
-
-  html += '</div>';
-
-  document.getElementById('drawerBody').innerHTML = html;
-  document.getElementById('drawerOverlay').classList.add('active');
-  setTimeout(() => document.getElementById('memberDrawer').classList.add('open'), 10);
-  document.body.style.overflow = 'hidden';
-}
-
-function toggleEditRow(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-function closeDrawer() {
-  document.getElementById('memberDrawer').classList.remove('open');
-  document.getElementById('drawerOverlay').classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-function confirmPaymentDrawer(memberId, month, year) {
-  if (confirm(`Mark pending payments for ${month} ${year} as PAID?`)) {
-    window.location.href = `?confirm_id=${memberId}&confirm_month=${month}&confirm_year=${year}&year=${year}&page=${currentPage}`;
-  }
-}
-
-function escHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function todayStr() {
-  return new Date().toISOString().split('T')[0];
-}
-
-// Swipe down to close drawer
-let touchStartY = 0;
-document.getElementById('memberDrawer').addEventListener('touchstart', e => {
-  touchStartY = e.touches[0].clientY;
-}, { passive: true });
-document.getElementById('memberDrawer').addEventListener('touchend', e => {
-  const diff = e.changedTouches[0].clientY - touchStartY;
-  if (diff > 80) closeDrawer();
-}, { passive: true });
-</script>
 
 </body>
 </html>

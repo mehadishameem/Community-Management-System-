@@ -65,7 +65,7 @@ $conn->close();
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Contribution - <?php echo htmlspecialchars($selectedMonth . " " . $selectedYear); ?></title>
 
-<link rel="stylesheet" href="contribution_current_month.css">
+<link rel="stylesheet" href="memberlist_and_payment.css">
 
 <style>
 /* Header and controls spacing */
