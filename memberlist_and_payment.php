@@ -348,7 +348,7 @@ window.addEventListener('DOMContentLoaded', function() {
 <table>
   <thead>
     <tr>
-      <th style="min-width: 200px;">Add Money</th>
+      <th style="min-width: 140px;">Add Money</th>
       <th style="min-width: 150px;">Member Name</th>
       <?php foreach ($allowed_months as $m): ?>
         <th style="min-width: 120px;"><?= $m ?></th>

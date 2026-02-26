@@ -247,6 +247,40 @@ td form {
   margin-bottom: 0;
 }
 
+/* Mobile: stack all add-money inputs vertically */
+@media (max-width: 768px) {
+  .add-money-row1,
+  .add-money-row2 {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .add-money-row1 input[type="date"],
+  .add-money-row1 input[type="number"] {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .add-money-row2 select,
+  .add-money-row2 button {
+    width: 100% !important;
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Give the Add Money column a reasonable fixed width on mobile */
+  td:first-child,
+  th:first-child {
+    min-width: 140px !important;
+    width: 140px;
+  }
+}
+
 select, 
 input[type="number"], 
 input[type="date"],
@@ -560,11 +594,6 @@ td[colspan] {
   th, td {
     padding: 12px 8px;
     font-size: 13px;
-  }
-  
-  .add-money-row1,
-  .add-money-row2 {
-    flex-direction: column;
   }
   
   select,
