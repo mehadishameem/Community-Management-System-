@@ -640,6 +640,297 @@ td[colspan] {
   }
 }
 
+/* Helper classes for toggling between desktop/mobile values */
+.desktop-only { display: inline; }
+.mobile-only { display: none; }
+
+/* Mobile-only: hide col-summary td on desktop */
+@media (min-width: 769px) {
+  td.col-summary { display: none !important; }
+  th.col-summary { display: none !important; }
+  .mobile-year-bar { display: none !important; }
+  .mobile-grand-total { display: none !important; }
+  /* ensure mobile-only elements are hidden on desktop */
+  .mobile-only { display: none !important; }
+  .desktop-only { display: inline !important; }
+}
+
+@media (max-width: 768px) {
+  /* swap visibility helpers */
+  .desktop-only { display: none !important; }
+  .mobile-only { display: inline !important; }
+}
+
+/* ── Mobile Year Bar ── */
+.mobile-year-bar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  padding: 8px 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.mobile-year-bar label {
+  font-weight: 700;
+  font-size: 13px;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.mobile-year-bar select {
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.3);
+  padding: 0 10px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #2d3748;
+  background: rgba(255,255,255,0.95);
+  min-width: 90px;
+  cursor: pointer;
+}
+
+/* ── Mobile Grand Total Bar ── */
+.mobile-grand-total {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  border-radius: 12px;
+  margin-top: 12px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+}
+
+/* ── Mobile Row Tap → Bottom Drawer ── */
+@media (max-width: 768px) {
+  .header-controls { display: none !important; }
+  .mobile-year-bar { display: flex !important; }
+  .mobile-grand-total { display: flex !important; }
+
+  /* Show only Name, Status, Total columns */
+  thead th:not(.col-name):not(.col-summary):not(.col-total),
+  tbody td:not(.col-name):not(.col-summary):not(.col-total),
+  tfoot tr { display: none !important; }
+
+  thead th.col-name, tbody td.col-name,
+  thead th.col-summary, tbody td.col-summary,
+  thead th.col-total, tbody td.col-total {
+    display: table-cell !important;
+  }
+
+  table { min-width: unset; width: 100%; }
+
+  thead th.col-name, tbody td.col-name {
+    text-align: left;
+    padding-left: 14px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  thead th.col-summary { text-align: center; }
+  tbody td.col-summary { text-align: center; padding: 10px 4px; }
+  thead th.col-total, tbody td.col-total {
+    text-align: right;
+    padding-right: 14px;
+    font-size: 13px;
+  }
+
+  tbody td.col-name::after {
+    content: ' ›';
+    color: #a855f7;
+    font-weight: 700;
+  }
+
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { transform: none; box-shadow: none; }
+}
+
+/* ── Bottom Drawer Overlay ── */
+.drawer-overlay {
+  display: none;
+  position: fixed;
+  top: 80px; /* start below navbar */
+  left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+.drawer-overlay.active { display: block; }
+
+.drawer {
+  position: fixed;
+  top: 80px; /* Start exactly where navbar ends */
+  bottom: 0; left: 0; right: 0;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 0 0 30px;
+  /* Height automatically constrained by top and bottom positions */
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1001;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+}
+.drawer.open { transform: translateY(0); }
+
+.drawer-handle {
+  width: 40px; height: 5px;
+  background: #d1d5db;
+  border-radius: 999px;
+  margin: 12px auto 0;
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 2px solid #f3f4f6;
+  position: sticky;
+  top: 0; background: #fff; z-index: 10;
+  border-radius: 20px 20px 0 0;
+}
+.drawer-header h3 { font-size: 17px; font-weight: 700; color: #1a202c; margin: 0; }
+
+.drawer-close {
+  width: 32px; height: 32px;
+  border-radius: 50%; border: none;
+  background: #f3f4f6; color: #6b7280;
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  min-width: unset; box-shadow: none; padding: 0;
+}
+.drawer-close:hover { background: #e5e7eb; transform: none; box-shadow: none; }
+
+.drawer-body { padding: 16px 20px; }
+
+.drawer-section-title {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: #9ca3af; margin: 12px 0 8px;
+}
+.drawer-section-title:first-child { margin-top: 0; }
+
+.drawer-add-form {
+  background: #f9fafb; border-radius: 12px;
+  border: 1px solid #e5e7eb; padding: 10px;
+}
+.drawer-add-form input,
+.drawer-add-form select,
+.drawer-add-form button { width: 100%; }
+
+/* Compact inputs inside the drawer add-payment form */
+.drawer-add-form input,
+.drawer-add-form select {
+  height: 34px;
+  font-size: 13px;
+}
+.drawer-add-form button {
+  height: 36px;
+  font-size: 13px;
+}
+.drawer-add-form > form > div[style*="flex-direction:column"],
+.drawer-add-form > form > div {
+  gap: 6px !important;
+}
+
+.drawer-total-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  border-radius: 10px; margin-top: 14px;
+  color: white; font-weight: 700; font-size: 15px;
+}
+
+.drawer-months { display: flex; flex-direction: column; gap: 8px; }
+
+/* Month card wraps the row + hidden edit form */
+.drawer-month-card {
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.drawer-month-row {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f9fafb;
+  gap: 6px;
+}
+
+.drawer-month-name {
+  font-weight: 600; font-size: 13px;
+  color: #374151; flex-shrink: 0; min-width: 68px;
+}
+
+.drawer-month-right {
+  display: flex; align-items: center;
+  gap: 6px; flex: 1; justify-content: flex-end; flex-wrap: wrap;
+}
+
+.drawer-month-status {
+  display: flex; flex-direction: column;
+  align-items: flex-end; gap: 4px;
+}
+
+.drawer-no-data { color: #9ca3af; font-size: 13px; }
+
+/* Inline Edit button per month */
+.drawer-edit-btn {
+  max-width: 120px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 5px 11px; height: 30px;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  color: #fff !important; border: none;
+  border-radius: 7px; font-size: 12px; font-weight: 600;
+  cursor: pointer; box-shadow: 0 2px 6px rgba(59,130,246,0.3);
+  flex-shrink: 0; min-width: unset;
+  transition: all 0.2s ease;
+}
+.drawer-edit-btn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(59,130,246,0.4);
+}
+
+/* Cancel button inside edit form */
+.drawer-cancel-btn {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  box-shadow: none !important;
+}
+.drawer-cancel-btn:hover {
+  background: #e5e7eb !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Inline edit form (hidden by default) */
+.drawer-edit-inline {
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+}
+.drawer-edit-inline input,
+.drawer-edit-inline select,
+.drawer-edit-inline button { width: 100%; }
+
+/* Reuse paid/pending badge sizes in drawer */
+.drawer-month-status .paid-cell,
+.drawer-month-status .pending-cell {
+  min-width: 90px; font-size: 12px;
+  padding: 5px 10px; text-align: center;
+}
+.drawer-month-status .pending-cell { cursor: pointer; }
+
 /* Dark mode support (optional) */
 @media (prefers-color-scheme: dark) {
   body {

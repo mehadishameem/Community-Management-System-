@@ -272,6 +272,9 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
           <li class="nav-item active">
             <a class="nav-link" href="#" data-page="memberlist_and_payment.php"> ACCOUNTS  <span class="sr-only">(current)</span></a>
           </li>
+          <li>
+            <a class="nav-link" href="#" data-page="members.php">MEMBER MANGEMENT</a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="#" data-page="contribution_current_month.php">MONTHWISE CONTRIBUTION</a>
           </li>
@@ -323,6 +326,34 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
       
 
     <script>
+        // ── Helper: fetch a URL, inject HTML into #content, re-run scripts ──
+        function loadPage(url) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not OK');
+                    return response.text();
+                })
+                .then(html => {
+                    const content = document.getElementById('content');
+                    content.innerHTML = html;
+                    // Re-execute any <script> tags in the injected HTML
+                    content.querySelectorAll('script').forEach(oldScript => {
+                        const newScript = document.createElement('script');
+                        if (oldScript.src) {
+                            newScript.src = oldScript.src;
+                        } else {
+                            newScript.textContent = oldScript.textContent;
+                        }
+                        document.body.appendChild(newScript);
+                        oldScript.remove();
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('content').innerHTML = '<p class="text-danger">Failed to load page.</p>';
+                    console.error('Error loading page:', error);
+                });
+        }
+
         // Attach click listeners to navbar links
         document.querySelectorAll('a.nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -334,19 +365,7 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
                 document.querySelectorAll('a.nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
 
-                // Fetch the content of the page and load into #content div
-                fetch(page)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not OK');
-                    return response.text();
-                })
-                .then(html => {
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('content').innerHTML = '<p class="text-danger">Failed to load page.</p>';
-                    console.error('Error loading page:', error);
-                });
+                loadPage(page);
             });
         });
 
@@ -361,19 +380,7 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
                 document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
 
-                // Fetch the content of the page and load into #content div
-                fetch(page)
-                .then(response => {
-                    if (!response.ok) throw new Error('Network response was not OK');
-                    return response.text();
-                })
-                .then(html => {
-                    document.getElementById('content').innerHTML = html;
-                })
-                .catch(error => {
-                    document.getElementById('content').innerHTML = '<p class="text-danger">Failed to load page.</p>';
-                    console.error('Error loading page:', error);
-                });
+                loadPage(page);
             });
         });
     </script>
@@ -417,6 +424,15 @@ if (isset($_GET['confirm_id'], $_GET['confirm_month'], $_GET['confirm_year'])) {
                     console.error('Error submitting form:', error);
                     alert('Failed to submit expense. Please try again.');
                 });
+            }
+            // Handle members.php forms (dynamically loaded)
+            if (e.target.matches('#memAddForm, #memEditForm, #memDeleteForm')) {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                fetch('members.php', { method: 'POST', body: formData })
+                .then(response => response.text())
+                .then(html => { document.getElementById('content').innerHTML = html; })
+                .catch(error => { console.error('Error:', error); alert('Action failed.'); });
             }
 
             // Handle addUserForm submission (dynamically loaded)

@@ -145,7 +145,7 @@
 </div>
 
 <div class="footer-contact">
-  &copy; ২০২৫ | All rights reserved. | Developed by <strong>Mehadi Hasan Shameem</strong><br />
+  &copy; ২০২৫ | All rights reserved. | Developed by <a href="https://www.facebook.com/shamim0.25.inf/" target="_blank"><strong>Mehadi Hasan Shameem</strong></a><br />
   <a href="#">About Us</a> |
   <a href="#">Contact</a> |
   <a href="#">Terms and Conditions</a>

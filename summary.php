@@ -933,7 +933,7 @@ if ($visualImages) {
     <div class="footer-inner">
         <div>
             © <?php echo date('Y'); ?> Yousuf Ali Bari Foundation. All rights reserved.
-            Developed by <strong>Mehadi Hasan Shameem</strong>.
+            Developed by <a href="https://www.facebook.com/shamim0.25.inf/" target="_blank"><strong>Mehadi Hasan Shameem</strong></a>.
         </div>
         <div class="footer-links">
             <a href="#top" class="footer-link">মূলপাতা</a>
